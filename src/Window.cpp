@@ -10,14 +10,17 @@ using namespace boost::filesystem;
 Window::Window()
 	:
 	m_type_factory{new hawk::Type_factory},
-	m_tab_manager{new hawk::Tab_manager{m_type_factory}},
 	m_vbox{Gtk::ORIENTATION_VERTICAL},
 	m_button_quit{"Quit"}
 {
+	// setup our window
+
 	set_title("hawk-gtk3-test");
 	set_border_width(5);
 	set_default_size(600, 300);
 	add(m_vbox);
+
+	// setup a layout for our window
 
 	m_vbox.pack_start(m_pwd_label, Gtk::PACK_SHRINK);
 	m_vbox.pack_start(m_tree_box, Gtk::PACK_EXPAND_WIDGET);
@@ -26,7 +29,10 @@ Window::Window()
 	m_button_box.set_border_width(5);
 	m_button_box.set_layout(Gtk::BUTTONBOX_END);
 
+	// connect the button to a callback function
 	m_button_quit.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_quit));
+
+	// register List_dir handler
 
 	hawk::Type_factory::Type_product tp =
 		[this](const path& p)
@@ -35,9 +41,16 @@ Window::Window()
 	m_type_factory->register_type(
 		hawk::get_handler_hash<hawk::List_dir>(), tp);
 
+	// only after the List_dir handler is registered we can instantiate Tab_manager
+	m_tab_manager = new hawk::Tab_manager {m_type_factory};
+
+	// create a new tab
 	hawk::Tab_manager::Tab_iterator tab = m_tab_manager->add_tab("/home/gman");
+
+	// print our working directory at the top of the window
 	m_pwd_label.set_text(tab->get_pwd().c_str());
 
+	// we're done
 	show_all_children();
 }
 
