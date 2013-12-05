@@ -13,6 +13,8 @@ private:
 	hawk::Type_factory* m_type_factory;
 	hawk::Tab_manager* m_tab_manager;
 
+	hawk::Tab_manager::Tab_iterator m_current_tab;
+
 	std::vector<Tree> m_trees;
 
 	Gtk::HBox m_tree_box;
@@ -26,6 +28,10 @@ private:
 public:
 	Window();
 	virtual ~Window();
+
+	Gtk::HBox& get_tree_box() { return m_tree_box; }
+	std::vector<Tree>& get_treevec() { return m_trees; }
+	hawk::Tab_manager::Tab_iterator get_current_tab();
 
 protected:
 	void on_button_quit();
