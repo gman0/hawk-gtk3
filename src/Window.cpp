@@ -7,6 +7,8 @@
 
 using namespace boost::filesystem;
 
+constexpr unsigned ncols = 3;
+
 Window::Window()
 	:
 	m_type_factory{new hawk::Type_factory},
@@ -36,19 +38,19 @@ Window::Window()
 
 	hawk::Type_factory::Type_product tp =
 		[this](const path& p)
-			{ return new Dir_preview{m_tree_box, &m_trees, p}; };
+			{ return new Dir_preview{p, this, ncols}; };
 
 	m_type_factory->register_type(
 		hawk::get_handler_hash<hawk::List_dir>(), tp);
 
 	// only after the List_dir handler is registered we can instantiate Tab_manager
-	m_tab_manager = new hawk::Tab_manager {m_type_factory};
+	m_tab_manager = new hawk::Tab_manager {m_type_factory, ncols};
 
 	// create a new tab
-	hawk::Tab_manager::Tab_iterator tab = m_tab_manager->add_tab("/home/gman");
+	m_current_tab = m_tab_manager->add_tab("/home/gman");
 
 	// print our working directory at the top of the window
-	m_pwd_label.set_text(tab->get_pwd().c_str());
+	m_pwd_label.set_text(m_current_tab->get_pwd().c_str());
 
 	// we're done
 	show_all_children();
