@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(hawk-gtk3-test)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -O3 -s")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -g -Og")
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
