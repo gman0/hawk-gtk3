@@ -15,6 +15,10 @@ public:
 	Dir_preview(const boost::filesystem::path& p, Window* win,
 		unsigned ncols);
 	~Dir_preview();
+
+	void set_tab_cursor(const hawk::List_dir::Dir_cursor& cursor);
+	hawk::List_dir::Dir_cursor get_begin_cursor() const;
+	void redraw() const;
 };
 
 #endif // DIR_PREVIEW_H

@@ -1,5 +1,8 @@
 #include "Window.h"
 #include "DirPreview.h"
+#include "tree_active.h"
+#include "tree_expand.h"
+#include "tree_shrink.h"
 
 using namespace boost::filesystem;
 
@@ -13,19 +16,42 @@ Dir_preview::Dir_preview(const path& p, Window* win, unsigned ncols)
 	auto& tvec = m_window->get_treevec();
 	m_id = tvec.size();
 
-	Tree::Tree_flags flags {};
+	Tree* t;
 
-	if (m_id == --ncols)
-		flags = Tree::TF_ACTIVE;
-	else if (m_id > ncols)
-		flags = Tree::TF_EXPAND;
+	if (m_id < --ncols)
+		t = new Tree_shrink {this, win->get_tree_box()};
+	else if (m_id == ncols)
+		t = new Tree_active {this, win->get_tree_box()};
+	else
+		t = new Tree_expand {this, win->get_tree_box()};
 
-	tvec.push_back({this, win->get_tree_box(), flags});
+	tvec.push_back(t);
 }
 
 Dir_preview::~Dir_preview()
 {
 	auto& tvec = m_window->get_treevec();
-	auto it = tvec.begin() + m_id;
-	tvec.erase(it);
+
+	delete tvec[m_id];
+
+	// The pointer to the tree is zeroed-out rather
+	// than erased from the vector so we won't get
+	// mismatched IDs (which are "calculated" from
+	// vector's size).
+	tvec[m_id] = nullptr;
+}
+
+void Dir_preview::set_tab_cursor(const hawk::List_dir::Dir_cursor& cursor)
+{
+	m_window->get_current_tab()->set_cursor(cursor);
+}
+
+hawk::List_dir::Dir_cursor Dir_preview::get_begin_cursor() const
+{
+	return m_window->get_current_tab()->get_begin_cursor();
+}
+
+void Dir_preview::redraw() const
+{
+	m_window->redraw();
 }
