@@ -7,6 +7,8 @@
 #include <vector>
 #include "Tree.h"
 
+using Tree_vector = std::vector<Tree*>;
+
 class Window : public Gtk::Window
 {
 private:
@@ -15,7 +17,7 @@ private:
 
 	hawk::Tab_manager::Tab_iterator m_current_tab;
 
-	std::vector<Tree> m_trees;
+	Tree_vector m_trees;
 
 	Gtk::HBox m_tree_box;
 	Gtk::Box m_vbox;
@@ -29,9 +31,13 @@ public:
 	Window();
 	virtual ~Window();
 
-	Gtk::HBox& get_tree_box() { return m_tree_box; }
-	std::vector<Tree>& get_treevec() { return m_trees; }
-	hawk::Tab_manager::Tab_iterator get_current_tab();
+	inline Gtk::HBox& get_tree_box() { return m_tree_box; }
+	inline Tree_vector& get_treevec() { return m_trees; }
+
+	inline hawk::Tab_manager::Tab_iterator get_current_tab()
+	{ return m_current_tab; }
+
+	inline void redraw() { show_all_children(); }
 
 protected:
 	void on_button_quit();
