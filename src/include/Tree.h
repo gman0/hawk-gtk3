@@ -6,17 +6,10 @@
 #include <hawk/Column.h>
 #include <gtkmm.h>
 
+class Dir_preview;
 class Tree
 {
-public:
-	enum Tree_flags
-	{
-		TF_SHRINK = 0, // TF_SHRINK won't grab focus
-		TF_EXPAND = 1 << 1, // TF_EXPAND will expand but won't grab focus
-		TF_ACTIVE = 1 << 2 | TF_EXPAND // TF_ACTIVE will both expand and grab focus
-	};
-
-private:
+protected:
 	struct Model_columns : public Gtk::TreeModel::ColumnRecord
 	{
 		Gtk::TreeModelColumn<Glib::ustring> entry;
@@ -27,10 +20,7 @@ private:
 		}
 	};
 
-	// With all the moving/copying around, we need to store the result
-	// of sigc's connect() function in order to properly disconnect it
-	// during Tree's destruction and then reconnect it again after copying.
-	sigc::connection m_sig_cursor_change;
+	Dir_preview* m_handler;
 
 	// we have to use pointers (shared_ptr's) because copying all
 	// of these member variables is forbidden
@@ -42,21 +32,19 @@ private:
 	std::shared_ptr<Gtk::VSeparator> m_separator;
 	std::shared_ptr<Gtk::ScrolledWindow> m_scrolled_window;
 
-	Tree_flags m_flags;
-
 public:
-	~Tree();
+	virtual ~Tree() {}
 	Tree(const Tree& t);
 	Tree(Tree&& t);
 	Tree& operator=(const Tree& t);
 	Tree& operator=(Tree&& t);
 
-	Tree(const hawk::List_dir* ld, Gtk::Box& box, Tree_flags flags);
+	Tree(Dir_preview* dp, Gtk::Box& box);
 
-	Gtk::Widget& get_widget();
-
-private:
-	void on_cursor_changed();
+	inline Gtk::Widget& get_widget()
+	{
+		return static_cast<Gtk::Widget&>(*m_scrolled_window);
+	}
 };
 
 #endif // TREE_H

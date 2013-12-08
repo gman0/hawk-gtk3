@@ -1,83 +1,61 @@
-#include <hawk/handlers/dir.h>
-#include <exception>
 #include <iostream>
 #include "Tree.h"
+#include "DirPreview.h"
 
 using namespace std;
 
-Tree::~Tree()
-{
-	m_sig_cursor_change.disconnect();
-}
-
 Tree::Tree(const Tree& t)
 	:
+	m_handler{t.m_handler},
 	m_columns{t.m_columns},
 	m_ref_tree_model{t.m_ref_tree_model},
 	m_tree_view{t.m_tree_view},
 	m_separator{t.m_separator},
-	m_scrolled_window{t.m_scrolled_window},
-	m_flags{t.m_flags}
-{
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree::on_cursor_changed));
-}
+	m_scrolled_window{t.m_scrolled_window}
+{}
 
 Tree::Tree(Tree&& t)
 	:
+	m_handler{t.m_handler},
 	m_columns{std::move(t.m_columns)},
 	m_ref_tree_model{std::move(t.m_ref_tree_model)},
 	m_tree_view{std::move(t.m_tree_view)},
 	m_separator{std::move(t.m_separator)},
-	m_scrolled_window{std::move(t.m_scrolled_window)},
-	m_flags{t.m_flags}
-{
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree::on_cursor_changed));
-}
+	m_scrolled_window{std::move(t.m_scrolled_window)}
+{}
 
 Tree& Tree::operator=(const Tree& t)
 {
+	m_handler = t.m_handler;
 	m_columns = t.m_columns;
 	m_ref_tree_model = t.m_ref_tree_model;
 	m_tree_view = t.m_tree_view;
 	m_separator = t.m_separator;
 	m_scrolled_window = t.m_scrolled_window;
-	m_flags = t.m_flags;
-
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree::on_cursor_changed));
 
 	return *this;
 }
 
 Tree& Tree::operator=(Tree&& t)
 {
+	m_handler = t.m_handler;
 	m_columns = std::move(t.m_columns);
 	m_ref_tree_model = std::move(t.m_ref_tree_model);
 	m_separator = std::move(t.m_separator);
 	m_tree_view = std::move(t.m_tree_view);
 	m_scrolled_window = std::move(t.m_scrolled_window);
-	m_flags = t.m_flags;
-
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree::on_cursor_changed));
 
 	return *this;
 }
 
-Tree::Tree(const hawk::List_dir* ld, Gtk::Box& box, Tree::Tree_flags flags)
+Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	:
+	m_handler{dp},
 	m_columns{new Model_columns},
 	m_ref_tree_model{Gtk::ListStore::create(*m_columns)},
 	m_tree_view{new Gtk::TreeView},
 	m_separator{new Gtk::VSeparator},
-	m_scrolled_window{new Gtk::ScrolledWindow},
-	m_flags{flags}
+	m_scrolled_window{new Gtk::ScrolledWindow}
 {
 	// setup the tree view
 
@@ -90,36 +68,21 @@ Tree::Tree(const hawk::List_dir* ld, Gtk::Box& box, Tree::Tree_flags flags)
 	m_scrolled_window->add(*m_tree_view);
 	m_scrolled_window->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
-	// add the TreeView
-	if (flags == TF_SHRINK)
-	{
-		m_tree_view->set_can_focus(false);
-		box.pack_start(get_widget(), Gtk::PACK_SHRINK);
-		m_scrolled_window->set_size_request(40);
-	}
-	else if (flags & TF_EXPAND)
-	{
-		box.pack_start(get_widget(), Gtk::PACK_EXPAND_WIDGET);
-
-		if ((flags & TF_ACTIVE) == TF_ACTIVE)
-			m_tree_view->grab_focus();
-	}
-
-	// add the separator
-	m_separator->set_margin_left(2);
-	m_separator->set_margin_right(2);
-	box.pack_start(*m_separator, Gtk::PACK_SHRINK);
-
 	// fill the tree
 
-	const hawk::List_dir::Dir_cache* cache = ld->read();
+	const hawk::List_dir::Dir_cache* cache = dp->read();
 
 	if (!cache)
 		return;
 
 	const hawk::List_dir::Dir_vector& vec = cache->vec;
 
-	// insert the cache entries into the tree model
+	// insert the cache entries into the tree model,
+	// but only if we have anything to insert
+
+	if (vec.empty())
+		return;
+
 	Gtk::TreeModel::Row row;
 	for (const auto& i : vec)
 	{
@@ -139,23 +102,5 @@ Tree::Tree(const hawk::List_dir* ld, Gtk::Box& box, Tree::Tree_flags flags)
 	// set the cursor
 	Gtk::TreePath tpath {tree_cursor};
 	m_tree_view->set_cursor(tpath);
-
-	// register on_cursor_changed signal
-	// Note that we're registering this signal AFTER setting the
-	// cursor on purpose - we don't need to check the cursor for preview as
-	// this was already done by libhawk when we created this tab.
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree::on_cursor_changed));
 }
 
-Gtk::Widget& Tree::get_widget()
-{
-	return static_cast<Gtk::Widget&>(*m_scrolled_window);
-}
-
-void Tree::on_cursor_changed()
-{
-	cout << "CURSOR CHANGED ";
-	if (m_flags != TF_ACTIVE) return;
-}
