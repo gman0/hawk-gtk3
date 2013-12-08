@@ -60,6 +60,9 @@ Window::~Window()
 {
 	delete m_tab_manager;
 	delete m_type_factory;
+
+	for (auto tree : m_trees)
+		delete tree;
 }
 
 void Window::on_button_quit()
