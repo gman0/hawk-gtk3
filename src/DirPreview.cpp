@@ -8,9 +8,12 @@ using namespace boost::filesystem;
 
 #include <iostream>
 using namespace std;
-Dir_preview::Dir_preview(const path& p, Window* win, unsigned ncols)
+Dir_preview::Dir_preview(const path& p,
+	const hawk::Column* parent_column,
+	Window* win,
+	unsigned ncols)
 	:
-	hawk::List_dir{p},
+	hawk::List_dir{p, parent_column},
 	m_window{win}
 {
 	auto& tvec = m_window->get_treevec();

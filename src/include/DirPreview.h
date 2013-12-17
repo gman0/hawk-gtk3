@@ -2,6 +2,7 @@
 #define DIR_PREVIEW_H
 
 #include <hawk/handlers/dir.h>
+#include <hawk/Tab.h>
 #include "Tree.h"
 
 class Window;
@@ -12,7 +13,9 @@ private:
 	size_t m_id;
 
 public:
-	Dir_preview(const boost::filesystem::path& p, Window* win,
+	Dir_preview(const boost::filesystem::path& p,
+		const hawk::Column* parent_column,
+		Window* win,
 		unsigned ncols);
 	~Dir_preview();
 
