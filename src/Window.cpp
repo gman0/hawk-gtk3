@@ -37,8 +37,8 @@ Window::Window()
 	// register List_dir handler
 
 	hawk::Type_factory::Type_product tp =
-		[this](const path& p)
-			{ return new Dir_preview{p, this, ncols}; };
+		[this](const path& p, const hawk::Column* parent_column)
+			{ return new Dir_preview{p, parent_column, this, ncols}; };
 
 	m_type_factory->register_type(
 		hawk::get_handler_hash<hawk::List_dir>(), tp);
