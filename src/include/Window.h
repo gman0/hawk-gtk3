@@ -5,7 +5,7 @@
 #include <hawk/TabManager.h>
 #include <hawk/TypeFactory.h>
 #include <vector>
-#include "Tree.h"
+#include "previews/Tree.h"
 
 using Tree_vector = std::vector<Tree*>;
 
