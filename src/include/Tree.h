@@ -32,12 +32,10 @@ protected:
 	std::shared_ptr<Gtk::VSeparator> m_separator;
 	std::shared_ptr<Gtk::ScrolledWindow> m_scrolled_window;
 
+	std::shared_ptr<Gtk::Label> m_empty;
+
 public:
-	virtual ~Tree() {}
-	Tree(const Tree& t);
-	Tree(Tree&& t);
-	Tree& operator=(const Tree& t);
-	Tree& operator=(Tree&& t);
+	virtual ~Tree() = default;
 
 	Tree(Dir_preview* dp, Gtk::Box& box);
 
@@ -45,6 +43,8 @@ public:
 	{
 		return static_cast<Gtk::Widget&>(*m_scrolled_window);
 	}
+
+	virtual void update();
 };
 
 #endif // TREE_H

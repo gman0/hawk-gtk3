@@ -4,50 +4,6 @@
 
 using namespace std;
 
-Tree::Tree(const Tree& t)
-	:
-	m_handler{t.m_handler},
-	m_columns{t.m_columns},
-	m_ref_tree_model{t.m_ref_tree_model},
-	m_tree_view{t.m_tree_view},
-	m_separator{t.m_separator},
-	m_scrolled_window{t.m_scrolled_window}
-{}
-
-Tree::Tree(Tree&& t)
-	:
-	m_handler{t.m_handler},
-	m_columns{std::move(t.m_columns)},
-	m_ref_tree_model{std::move(t.m_ref_tree_model)},
-	m_tree_view{std::move(t.m_tree_view)},
-	m_separator{std::move(t.m_separator)},
-	m_scrolled_window{std::move(t.m_scrolled_window)}
-{}
-
-Tree& Tree::operator=(const Tree& t)
-{
-	m_handler = t.m_handler;
-	m_columns = t.m_columns;
-	m_ref_tree_model = t.m_ref_tree_model;
-	m_tree_view = t.m_tree_view;
-	m_separator = t.m_separator;
-	m_scrolled_window = t.m_scrolled_window;
-
-	return *this;
-}
-
-Tree& Tree::operator=(Tree&& t)
-{
-	m_handler = t.m_handler;
-	m_columns = std::move(t.m_columns);
-	m_ref_tree_model = std::move(t.m_ref_tree_model);
-	m_separator = std::move(t.m_separator);
-	m_tree_view = std::move(t.m_tree_view);
-	m_scrolled_window = std::move(t.m_scrolled_window);
-
-	return *this;
-}
-
 Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	:
 	m_handler{dp},
@@ -55,7 +11,8 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	m_ref_tree_model{Gtk::ListStore::create(*m_columns)},
 	m_tree_view{new Gtk::TreeView},
 	m_separator{new Gtk::VSeparator},
-	m_scrolled_window{new Gtk::ScrolledWindow}
+	m_scrolled_window{new Gtk::ScrolledWindow},
+	m_empty{new Gtk::Label{"empty"}}
 {
 	// setup the tree view
 
@@ -68,20 +25,30 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	m_scrolled_window->add(*m_tree_view);
 	m_scrolled_window->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
-	// fill the tree
+	// TODO: this
+	// m_vbox_empty->pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
+	// box.pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
 
-	const hawk::List_dir::Dir_cache* cache = dp->read();
+	update();
+}
 
-	if (!cache)
-		return;
-
-	const hawk::List_dir::Dir_vector& vec = cache->vec;
-
-	// insert the cache entries into the tree model,
+void Tree::update()
+{
+	// insert the dir entries into the tree model,
 	// but only if we have anything to insert
 
+	if (!m_ref_tree_model->children().empty())
+		m_ref_tree_model->clear();
+
+	const hawk::List_dir::Dir_vector& vec = m_handler->get_contents();
+
 	if (vec.empty())
+	{
+		m_empty->show();
 		return;
+	}
+
+	// m_empty->hide();
 
 	Gtk::TreeModel::Row row;
 	for (const auto& i : vec)
@@ -92,7 +59,7 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 
 	// we need to have const_iterator's (because cache is const)
 	hawk::List_dir::Dir_vector::const_iterator begin = vec.begin();
-	hawk::List_dir::Dir_vector::const_iterator cursor = cache->cursor;
+	hawk::List_dir::Dir_vector::const_iterator cursor = m_handler->get_cursor();
 
 	// convert libhawk's cursor to tree's cursor
 	auto tree_cursor = m_ref_tree_model->children().begin();
@@ -103,4 +70,3 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	Gtk::TreePath tpath {tree_cursor};
 	m_tree_view->set_cursor(tpath);
 }
-
