@@ -14,7 +14,7 @@ private:
 
 public:
 	Dir_preview(const boost::filesystem::path& p,
-		const hawk::Column* parent_column,
+		hawk::Column* parent_column,
 		Window* win,
 		unsigned ncols);
 	~Dir_preview();

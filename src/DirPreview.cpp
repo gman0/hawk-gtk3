@@ -6,10 +6,8 @@
 
 using namespace boost::filesystem;
 
-#include <iostream>
-using namespace std;
 Dir_preview::Dir_preview(const path& p,
-	const hawk::Column* parent_column,
+	hawk::Column* parent_column,
 	Window* win,
 	unsigned ncols)
 	:
