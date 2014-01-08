@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "DirPreview.h"
+#include "previews/DirPreview.h"
 #include "tree_active.h"
 #include "tree_expand.h"
 #include "tree_shrink.h"

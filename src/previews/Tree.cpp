@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Tree.h"
-#include "DirPreview.h"
+#include "previews/Tree.h"
+#include "previews/DirPreview.h"
 
 using namespace std;
 

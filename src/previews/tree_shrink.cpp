@@ -1,4 +1,4 @@
-#include "tree_shrink.h"
+#include "previews/tree_shrink.h"
 
 Tree_shrink::Tree_shrink(Dir_preview* dp, Gtk::Box& box)
 	: Tree{dp, box}

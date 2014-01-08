@@ -1,5 +1,5 @@
-#include "DirPreview.h"
-#include "tree_active.h"
+#include "previews/DirPreview.h"
+#include "previews/tree_active.h"
 
 Tree_active::~Tree_active()
 {
