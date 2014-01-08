@@ -21,6 +21,8 @@ public:
 
 	Tree_active(Dir_preview* dp, Gtk::Box& box);
 
+	virtual void update();
+
 private:
 	void on_cursor_changed();
 };

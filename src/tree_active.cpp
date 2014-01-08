@@ -64,9 +64,24 @@ Tree_active::Tree_active(Dir_preview* dp, Gtk::Box& box)
 			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
 }
 
+void Tree_active::update()
+{
+	// We need to block the on_cursor_changed signal
+	// for the whole duration of updating the tree
+	// so that we won't set the cursor recursively.
+	m_sig_cursor_change.block();
+
+	Tree::update();
+
+	m_sig_cursor_change.unblock();
+}
+
 void Tree_active::on_cursor_changed()
 {
 	// get the position of the cursor
+
+	if (m_ref_tree_model->children().size() == 0)
+		return;
 
 	Gtk::TreeModel::Path tree_path;
 	Gtk::TreeViewColumn* tree_col;
