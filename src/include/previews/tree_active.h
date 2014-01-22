@@ -11,6 +11,8 @@ private:
 	// of sigc's connect() function in order to properly disconnect it
 	// during Tree_active's destruction and then reconnect it again after copying.
 	sigc::connection m_sig_cursor_change;
+	sigc::connection m_sig_kb_press;
+	sigc::connection m_sig_kb_release;
 
 public:
 	virtual ~Tree_active();
@@ -24,7 +26,10 @@ public:
 	virtual void update();
 
 private:
+	void register_signals();
+
 	void on_cursor_changed();
+	bool on_kb_press(GdkEventKey* event);
 };
 
 #endif // TREE_ACTIVE_H

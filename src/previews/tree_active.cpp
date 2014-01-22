@@ -1,35 +1,37 @@
+#include <gtk-3.0/gdk/gdkkeysyms.h>
+#include <gdk/gdk.h>
+#include <hawk/TabManager.h>
+#include "Window.h"
 #include "previews/DirPreview.h"
 #include "previews/tree_active.h"
 
+#include <iostream>
+using namespace std;
 Tree_active::~Tree_active()
 {
 	m_sig_cursor_change.disconnect();
+	m_sig_kb_press.disconnect();
+	m_sig_kb_release.disconnect();
 }
 
 Tree_active::Tree_active(const Tree_active& t)
 	: Tree{t}
 {
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
+	register_signals();
 }
 
 Tree_active::Tree_active(Tree_active&& t)
 	: Tree{std::move(t)}
 {
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
+	register_signals();
 }
 
 Tree_active& Tree_active::operator=(const Tree_active& t)
 {
 	Tree::operator=(t);
-	
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
-	
+
+	register_signals();
+
 	return *this;
 }
 
@@ -37,10 +39,8 @@ Tree_active& Tree_active::operator=(Tree_active&& t)
 {
 	Tree::operator=(std::move(t));
 
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
-	
+	register_signals();
+
 	return *this;
 }
 
@@ -55,13 +55,12 @@ Tree_active::Tree_active(Dir_preview* dp, Gtk::Box& box)
 	m_separator->set_margin_right(2);
 	box.pack_start(*m_separator, Gtk::PACK_SHRINK);
 
-	// register on_cursor_changed signal
-	// Note that we're registering this signal AFTER setting the
+	// register the signals
+	// Note that we're registering on_cursor_change signal AFTER setting the
 	// cursor on purpose - we don't need to check the cursor for preview as
 	// this was already done by libhawk when we created this tab.
-	m_sig_cursor_change =
-		m_tree_view->signal_cursor_changed().connect(
-			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
+
+	register_signals();
 }
 
 void Tree_active::update()
@@ -74,6 +73,22 @@ void Tree_active::update()
 	Tree::update();
 
 	m_sig_cursor_change.unblock();
+}
+
+void Tree_active::register_signals()
+{
+	m_sig_cursor_change =
+		m_tree_view->signal_cursor_changed().connect(
+			sigc::mem_fun(*this, &Tree_active::on_cursor_changed));
+	m_sig_kb_press =
+		m_tree_view->signal_key_press_event().connect(
+			sigc::mem_fun(*this, &Tree_active::on_kb_press));
+	m_sig_kb_release =
+		m_tree_view->signal_key_release_event().connect(
+			sigc::mem_fun(*this, &Tree_active::on_kb_press));
+
+
+	m_tree_view->add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
 }
 
 void Tree_active::on_cursor_changed()
@@ -97,4 +112,27 @@ void Tree_active::on_cursor_changed()
 	m_handler->set_tab_cursor(begin + pos);
 
 	m_handler->redraw();
+}
+
+bool Tree_active::on_kb_press(GdkEventKey* evt)
+{
+	if (evt->state == 0)
+	{
+		Window* wnd = m_handler->get_window();
+		auto tab_it = wnd->get_current_tab();
+
+		switch (evt->keyval)
+		{
+			case GDK_KEY_Left:
+				wnd->set_pwd(tab_it->get_pwd().parent_path());
+				return true;
+
+			case GDK_KEY_Right:
+			case GDK_KEY_Return:
+				wnd->set_pwd(*(m_handler->get_cursor()));
+				return true;
+		}
+	}
+
+	return false;
 }
