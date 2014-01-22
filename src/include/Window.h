@@ -5,6 +5,7 @@
 #include <hawk/TabManager.h>
 #include <hawk/TypeFactory.h>
 #include <vector>
+#include <boost/filesystem/path.hpp>
 #include "previews/Tree.h"
 
 using Tree_vector = std::vector<Tree*>;
@@ -42,6 +43,10 @@ public:
 	{ return m_current_tab; }
 
 	inline void redraw() { show_all_children(); }
+	void update_and_redraw();
+
+	void set_pwd(boost::filesystem::path&& pwd);
+	void set_pwd(const boost::filesystem::path& pwd);
 
 protected:
 	void on_button_quit();

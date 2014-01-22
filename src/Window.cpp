@@ -93,7 +93,12 @@ void Window::on_button_cd()
 	boost::filesystem::path pwd { m_entry_cd.get_text().c_str() };
 	m_current_tab->set_pwd(pwd);
 
-	m_pwd_label.set_text(pwd.c_str());
+	update_and_redraw();
+}
+
+void Window::update_and_redraw()
+{
+	m_pwd_label.set_text(m_current_tab->get_pwd().c_str());
 
 	for (Tree* tree : m_trees)
 	{
@@ -102,4 +107,16 @@ void Window::on_button_cd()
 	}
 
 	redraw();
+}
+
+void Window::set_pwd(boost::filesystem::path&& pwd)
+{
+	m_current_tab->set_pwd(std::move(pwd));
+	update_and_redraw();
+}
+
+void Window::set_pwd(const boost::filesystem::path& pwd)
+{
+	m_current_tab->set_pwd(pwd);
+	update_and_redraw();
 }
