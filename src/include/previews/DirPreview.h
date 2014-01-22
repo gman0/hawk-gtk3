@@ -21,6 +21,7 @@ public:
 
 	void set_tab_cursor(const hawk::List_dir::Dir_cursor& cursor);
 	hawk::List_dir::Dir_cursor get_begin_cursor() const;
+	Window* get_window() { return m_window; }
 	void redraw() const;
 };
 
