@@ -95,7 +95,7 @@ void Tree_active::on_cursor_changed()
 {
 	// get the position of the cursor
 
-	if (m_ref_tree_model->children().size() == 0)
+	if (m_tree_model->children().size() == 0)
 		return;
 
 	Gtk::TreeModel::Path tree_path;
@@ -103,13 +103,12 @@ void Tree_active::on_cursor_changed()
 
 	m_tree_view->get_cursor(tree_path, tree_col);
 
-	int pos = std::distance(m_ref_tree_model->children().begin(),
-						m_ref_tree_model->get_iter(tree_path));
+	int id = m_tree_model->get_iter(tree_path)->get_value(m_columns->id);
 
 	// set the cursor
 
 	auto begin = m_handler->get_begin_cursor();
-	m_handler->set_tab_cursor(begin + pos);
+	m_handler->set_tab_cursor(begin + id);
 
 	m_handler->redraw();
 }
