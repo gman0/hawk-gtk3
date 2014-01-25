@@ -8,7 +8,7 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	:
 	m_handler{dp},
 	m_columns{new Model_columns},
-	m_ref_tree_model{Gtk::ListStore::create(*m_columns)},
+	m_tree_model{Gtk::ListStore::create(*m_columns)},
 	m_tree_view{new Gtk::TreeView},
 	m_separator{new Gtk::VSeparator},
 	m_scrolled_window{new Gtk::ScrolledWindow},
@@ -16,7 +16,7 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 {
 	// setup the tree view
 
-	m_tree_view->set_model(m_ref_tree_model);
+	m_tree_view->set_model(m_tree_model);
 	m_tree_view->set_rules_hint();
 	m_tree_view->append_column("Name", m_columns->entry);
 	m_tree_view->set_headers_visible(false);
@@ -27,6 +27,7 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 
 	// TODO: this
 	// m_vbox_empty->pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
+	// m_vbox_empty->set_no_show_all();
 	// box.pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
 
 	update();
@@ -37,8 +38,8 @@ void Tree::update()
 	// insert the dir entries into the tree model,
 	// but only if we have anything to insert
 
-	if (!m_ref_tree_model->children().empty())
-		m_ref_tree_model->clear();
+	if (!m_tree_model->children().empty())
+		m_tree_model->clear();
 
 	const hawk::List_dir::Dir_vector& vec = m_handler->get_contents();
 
@@ -50,11 +51,16 @@ void Tree::update()
 
 	// m_empty->hide();
 
+	m_tree_model->set_sort_column(0, Gtk::SORT_ASCENDING);
+
+	// fill the TreeModel
 	Gtk::TreeModel::Row row;
+	size_t id = 0;
 	for (const auto& i : vec)
 	{
-		row = *(m_ref_tree_model->append());
+		row = *(m_tree_model->append());
 		row[m_columns->entry] = i.filename().c_str();
+		row[m_columns->id] = id++;
 	}
 
 	// we need to have const_iterator's (because cache is const)
@@ -62,7 +68,7 @@ void Tree::update()
 	hawk::List_dir::Dir_vector::const_iterator cursor = m_handler->get_cursor();
 
 	// convert libhawk's cursor to tree's cursor
-	auto tree_cursor = m_ref_tree_model->children().begin();
+	auto tree_cursor = m_tree_model->children().begin();
 	for (int i = std::distance(begin, cursor) - 1; i >= 0; --i)
 		++tree_cursor;
 

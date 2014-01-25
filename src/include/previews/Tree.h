@@ -13,10 +13,12 @@ protected:
 	struct Model_columns : public Gtk::TreeModel::ColumnRecord
 	{
 		Gtk::TreeModelColumn<Glib::ustring> entry;
+		Gtk::TreeModelColumn<int> id;
 
 		Model_columns()
 		{
 			add(entry);
+			add(id);
 		}
 	};
 
@@ -26,7 +28,7 @@ protected:
 	// of these member variables is forbidden
 	std::shared_ptr<Model_columns> m_columns;
 
-	Glib::RefPtr<Gtk::ListStore> m_ref_tree_model;
+	Glib::RefPtr<Gtk::ListStore> m_tree_model;
 	std::shared_ptr<Gtk::TreeView> m_tree_view;
 
 	std::shared_ptr<Gtk::VSeparator> m_separator;
