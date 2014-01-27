@@ -3,10 +3,11 @@
 
 #include <functional>
 #include <hawk/handlers/hash.h>
+#include <hawk/calchash.h>
 #include "previews/ImagePreview.h"
 
-static std::string type { "image/jpeg" };
-static size_t hash = std::hash<std::string>()(type);
+static std::string type { "image" };
+static size_t hash = hawk::calculate_mime_hash(type);
 
 namespace hawk {
 	template <>
