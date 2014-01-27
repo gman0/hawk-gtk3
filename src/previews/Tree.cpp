@@ -51,6 +51,8 @@ void Tree::update()
 
 	// m_empty->hide();
 
+	// TODO: make a custom sorting function
+	//       skip its parent path when comparing the strings
 	m_tree_model->set_sort_column(0, Gtk::SORT_ASCENDING);
 
 	// fill the TreeModel
