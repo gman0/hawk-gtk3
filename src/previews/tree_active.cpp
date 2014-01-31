@@ -128,7 +128,7 @@ bool Tree_active::on_kb_press(GdkEventKey* evt)
 
 			case GDK_KEY_Right:
 			case GDK_KEY_Return:
-				wnd->set_pwd(*(m_handler->get_cursor()));
+				wnd->set_pwd(m_handler->get_cursor()->path);
 				return true;
 		}
 	}

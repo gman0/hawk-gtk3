@@ -61,7 +61,7 @@ void Tree::update()
 	for (const auto& i : vec)
 	{
 		row = *(m_tree_model->append());
-		row[m_columns->entry] = i.filename().c_str();
+		row[m_columns->entry] = i.path.filename().c_str();
 		row[m_columns->id] = id++;
 	}
 
