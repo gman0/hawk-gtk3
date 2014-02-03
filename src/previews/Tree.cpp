@@ -1,8 +1,48 @@
 #include <iostream>
+#include <cwctype>
+#include <cctype>
+#include <string>
+#include <algorithm>
 #include "previews/Tree.h"
 #include "previews/DirPreview.h"
 
 using namespace std;
+
+using sort_cmp_function = int(*)(const Gtk::TreeModel::iterator&, const Gtk::TreeModel::iterator&);
+
+static int sort_name(const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b)
+{
+	string str_a;
+	a->get_value(0, str_a);
+	transform(str_a.begin(), str_a.end(), str_a.begin(), std::towlower);
+
+	string str_b;
+	b->get_value(0, str_b);
+	transform(str_b.begin(), str_b.end(), str_b.begin(), std::towlower);
+
+	// We have to convert the "special" unicode character to something
+	// of a lower value so that alphabetically it comes prior to the entries
+	// without this character.
+
+	if (str_a[0] == '\xc2' && str_a[1] == '\xad')
+	{
+		str_a[0] = '\x1';
+		str_a[1] = '\x1';
+	}
+
+	if (str_b[0] == '\xc2' && str_b[1] == '\xad')
+	{
+		str_b[0] = '\x1';
+		str_b[1] = '\x1';
+	}
+
+	if (str_a > str_b)
+		return 1;
+	else if (str_a < str_b)
+		return -1;
+	else
+		return 0;
+}
 
 Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	:
@@ -50,18 +90,26 @@ void Tree::update()
 	}
 
 	// m_empty->hide();
-
-	// TODO: make a custom sorting function
-	//       skip its parent path when comparing the strings
+	m_tree_model->set_sort_func(m_columns->entry, sigc::ptr_fun(&sort_name));
 	m_tree_model->set_sort_column(0, Gtk::SORT_ASCENDING);
 
 	// fill the TreeModel
 	Gtk::TreeModel::Row row;
 	size_t id = 0;
+	Glib::ustring name;
 	for (const auto& i : vec)
 	{
+		name.clear();
+
 		row = *(m_tree_model->append());
-		row[m_columns->entry] = i.path.filename().c_str();
+
+		// mark directories with this unicode character (for sorting)
+		if (i.status.type() == boost::filesystem::directory_file)
+			name = "\xc2\xad";
+
+		name.append(i.path.filename().c_str());
+
+		row[m_columns->entry] = name;
 		row[m_columns->id] = id++;
 	}
 
