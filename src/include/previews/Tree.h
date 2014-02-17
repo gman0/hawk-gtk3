@@ -47,6 +47,10 @@ public:
 	}
 
 	virtual void update();
+
+private:
+	Gtk::TreeModel::iterator get_tree_iter(int id,
+		const Gtk::TreeModel::Children& children);
 };
 
 #endif // TREE_H

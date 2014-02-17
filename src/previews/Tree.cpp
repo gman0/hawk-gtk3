@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cwctype>
 #include <cctype>
 #include <string>
@@ -8,7 +7,8 @@
 
 using namespace std;
 
-using sort_cmp_function = int(*)(const Gtk::TreeModel::iterator&, const Gtk::TreeModel::iterator&);
+using sort_cmp_function =
+	int(*)(const Gtk::TreeModel::iterator&, const Gtk::TreeModel::iterator&);
 
 static int sort_name(const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b)
 {
@@ -70,6 +70,7 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	// m_vbox_empty->set_no_show_all();
 	// box.pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
 
+	m_tree_model->set_sort_func(m_columns->entry, sigc::ptr_fun(&sort_name));
 	update();
 }
 
@@ -89,9 +90,9 @@ void Tree::update()
 		return;
 	}
 
-	// m_empty->hide();
-	m_tree_model->set_sort_func(m_columns->entry, sigc::ptr_fun(&sort_name));
 	m_tree_model->set_sort_column(0, Gtk::SORT_ASCENDING);
+
+	// m_empty->hide();
 
 	// fill the TreeModel
 	Gtk::TreeModel::Row row;
@@ -113,16 +114,34 @@ void Tree::update()
 		row[m_columns->id] = id++;
 	}
 
-	// we need to have const_iterator's (because cache is const)
-	hawk::List_dir::Dir_vector::const_iterator begin = vec.begin();
-	hawk::List_dir::Dir_vector::const_iterator cursor = m_handler->get_cursor();
+	// setup the cursor
 
-	// convert libhawk's cursor to tree's cursor
-	auto tree_cursor = m_tree_model->children().begin();
-	for (int i = std::distance(begin, cursor) - 1; i >= 0; --i)
-		++tree_cursor;
+	Gtk::TreeModel::iterator tree_cursor;
 
-	// set the cursor
-	Gtk::TreePath tpath {tree_cursor};
-	m_tree_view->set_cursor(tpath);
+	if (m_handler->implicit_cursor())
+	{
+		tree_cursor = m_tree_model->children().begin();
+		auto it = m_handler->get_contents().begin()
+			+ tree_cursor->get_value(m_columns->id);
+		m_handler->set_cursor(it);
+	}
+	else
+	{
+		tree_cursor = get_tree_iter(
+			distance(vec.begin(), m_handler->get_const_cursor()),
+			m_tree_model->children());
+	}
+
+	// set the TreeView cursor
+	m_tree_view->set_cursor(Gtk::TreePath {tree_cursor});
+}
+
+Gtk::TreeModel::iterator Tree::get_tree_iter(int id,
+		const Gtk::TreeModel::Children& children)
+{
+	auto it = children.begin();
+	while (it->get_value(m_columns->id) != id)
+		++it;
+
+	return it;
 }
