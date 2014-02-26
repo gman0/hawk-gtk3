@@ -2,12 +2,14 @@
 #include <exception>
 #include <hawk/handlers/dir.h>
 #include <hawk/handlers/dir_hash.h>
+#include <boost/system/error_code.hpp>
 #include "Window.h"
 #include "previews/DirPreview.h"
 #include "previews/ImagePreview.h"
 #include "previews/ImagePreview_hash_extern.h"
 
 using namespace boost::filesystem;
+using namespace std;
 
 constexpr unsigned ncols = 3;
 
@@ -15,8 +17,8 @@ Window::Window()
 	:
 	m_type_factory{new hawk::Type_factory},
 	m_vbox{Gtk::ORIENTATION_VERTICAL},
-	m_button_quit{"Quit"},
-	m_button_cd{"cd"}
+	m_button_quit{"_Quit", true},
+	m_button_cd{"_cd", true}
 {
 	// setup our window
 
@@ -30,7 +32,11 @@ Window::Window()
 	m_vbox.pack_start(m_pwd_label, Gtk::PACK_SHRINK);
 	m_vbox.pack_start(m_tree_box, Gtk::PACK_EXPAND_WIDGET);
 	m_vbox.pack_start(m_hbox_cd, Gtk::PACK_SHRINK);
-	m_vbox.pack_start(m_button_box, Gtk::PACK_SHRINK);
+
+	m_vbox.pack_start(m_bottom, Gtk::PACK_SHRINK);
+	m_bottom.pack_end(m_button_box, Gtk::PACK_SHRINK);
+
+	// m_vbox.pack_start(m_button_box, Gtk::PACK_SHRINK);
 	m_button_box.pack_start(m_button_cd, Gtk::PACK_SHRINK);
 	m_button_box.pack_start(m_button_quit, Gtk::PACK_SHRINK);
 	m_button_box.set_border_width(5);
@@ -42,6 +48,22 @@ Window::Window()
 	// connect the button to a callback function
 	m_button_quit.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_quit));
 	m_button_cd.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_cd));
+
+	Gtk::Container* infobar_container =
+		dynamic_cast<Gtk::Container*>(m_infobar.get_content_area());
+
+	if (infobar_container)
+		infobar_container->add(m_infobar_msg);
+
+	m_infobar_msg.show();
+
+	m_infobar.set_no_show_all();
+	m_infobar.add_button("Ok", 0);
+	m_bottom.pack_start(m_infobar, Gtk::PACK_SHRINK);
+
+	m_infobar.signal_response().connect(sigc::mem_fun(*this, &Window::on_infobar_response));
+
+	// *-*-* hawk *-*-*
 
 	// register List_dir handler
 
@@ -91,9 +113,13 @@ void Window::on_button_quit()
 void Window::on_button_cd()
 {
 	boost::filesystem::path pwd { m_entry_cd.get_text().c_str() };
-	m_current_tab->set_pwd(pwd);
+	set_pwd(pwd);
+}
 
-	update_and_redraw();
+void Window::on_infobar_response(int response)
+{
+	m_infobar_msg.set_text("");
+	m_infobar.hide();
 }
 
 void Window::update_and_redraw()
@@ -109,14 +135,23 @@ void Window::update_and_redraw()
 	redraw();
 }
 
-void Window::set_pwd(boost::filesystem::path&& pwd)
+void Window::set_pwd(const boost::filesystem::path& pwd)
 {
-	m_current_tab->set_pwd(std::move(pwd));
+	boost::system::error_code ec;
+	m_current_tab->set_pwd(pwd, ec);
+
+	if (ec)
+	{
+		set_infobar_msg(ec.message());
+		return;
+	}
+
 	update_and_redraw();
 }
 
-void Window::set_pwd(const boost::filesystem::path& pwd)
+void Window::set_infobar_msg(const std::string& msg)
 {
-	m_current_tab->set_pwd(pwd);
-	update_and_redraw();
+	m_infobar_msg.set_text(msg);
+	m_infobar.set_message_type(Gtk::MESSAGE_INFO);
+	m_infobar.show();
 }
