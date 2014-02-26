@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Window.h"
 #include "previews/DirPreview.h"
 #include "previews/tree_active.h"
@@ -44,7 +45,11 @@ Dir_preview::~Dir_preview()
 
 void Dir_preview::set_tab_cursor(const hawk::List_dir::Dir_cursor& cursor)
 {
-	m_window->get_current_tab()->set_cursor(cursor);
+	boost::system::error_code ec;
+	m_window->get_current_tab()->set_cursor(cursor, ec);
+
+	if (ec)
+		m_window->set_infobar_msg(ec.message());
 }
 
 hawk::List_dir::Dir_cursor Dir_preview::get_begin_cursor() const
