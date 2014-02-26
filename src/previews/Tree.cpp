@@ -10,7 +10,8 @@ using namespace std;
 using sort_cmp_function =
 	int(*)(const Gtk::TreeModel::iterator&, const Gtk::TreeModel::iterator&);
 
-static int sort_name(const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b)
+static int sort_name(const Gtk::TreeModel::iterator& a,
+	const Gtk::TreeModel::iterator& b)
 {
 	string str_a;
 	a->get_value(0, str_a);
@@ -52,8 +53,9 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	m_tree_view{new Gtk::TreeView},
 	m_separator{new Gtk::VSeparator},
 	m_scrolled_window{new Gtk::ScrolledWindow},
-	m_empty{new Gtk::Label{"empty"}}
+	m_empty{new Gtk::Label{"empty", Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER}}
 {
+	m_empty->set_justify(Gtk::JUSTIFY_CENTER);
 	// setup the tree view
 
 	m_tree_view->set_model(m_tree_model);
@@ -66,9 +68,8 @@ Tree::Tree(Dir_preview* dp, Gtk::Box& box)
 	m_scrolled_window->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
 	// TODO: this
-	// m_vbox_empty->pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
-	// m_vbox_empty->set_no_show_all();
-	// box.pack_start(*m_empty, Gtk::PACK_EXPAND_WIDGET);
+	m_empty->set_no_show_all();
+	box.pack_start(*m_empty, Gtk::PACK_SHRINK);
 
 	m_tree_model->set_sort_func(m_columns->entry, sigc::ptr_fun(&sort_name));
 	update();
@@ -86,13 +87,15 @@ void Tree::update()
 
 	if (vec.empty())
 	{
+		m_tree_view->hide();
+		m_scrolled_window->hide();
 		m_empty->show();
 		return;
 	}
 
 	m_tree_model->set_sort_column(0, Gtk::SORT_ASCENDING);
 
-	// m_empty->hide();
+	m_empty->hide();
 
 	// fill the TreeModel
 	Gtk::TreeModel::Row row;
@@ -117,6 +120,7 @@ void Tree::update()
 	// setup the cursor
 
 	Gtk::TreeModel::iterator tree_cursor;
+	boost::system::error_code ec;
 
 	if (m_handler->implicit_cursor())
 	{
