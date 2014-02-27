@@ -1,9 +1,9 @@
 #include <gtk-3.0/gdk/gdkkeysyms.h>
 #include <gdk/gdk.h>
-#include <hawk/TabManager.h>
+#include <hawk/Tab_manager.h>
 #include "Window.h"
-#include "previews/DirPreview.h"
-#include "previews/tree_active.h"
+#include "previews/Dir_preview.h"
+#include "previews/Tree_active.h"
 
 #include <iostream>
 using namespace std;

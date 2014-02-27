@@ -1,9 +1,9 @@
 #include <iostream>
 #include "Window.h"
-#include "previews/DirPreview.h"
-#include "previews/tree_active.h"
-#include "previews/tree_expand.h"
-#include "previews/tree_shrink.h"
+#include "previews/Dir_preview.h"
+#include "previews/Tree_active.h"
+#include "previews/Tree_expand.h"
+#include "previews/Tree_shrink.h"
 
 using namespace boost::filesystem;
 

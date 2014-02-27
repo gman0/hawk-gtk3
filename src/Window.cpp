@@ -1,12 +1,12 @@
 #include <iostream>
 #include <exception>
-#include <hawk/handlers/dir.h>
-#include <hawk/handlers/dir_hash.h>
+#include <hawk/handlers/List_dir.h>
+#include <hawk/handlers/List_dir_hash.h>
 #include <boost/system/error_code.hpp>
 #include "Window.h"
-#include "previews/DirPreview.h"
-#include "previews/ImagePreview.h"
-#include "previews/ImagePreview_hash_extern.h"
+#include "previews/Dir_preview.h"
+#include "previews/Image_preview.h"
+#include "previews/Image_preview_hash_extern.h"
 
 using namespace boost::filesystem;
 using namespace std;

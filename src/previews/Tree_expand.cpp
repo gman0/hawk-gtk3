@@ -1,4 +1,4 @@
-#include "previews/tree_expand.h"
+#include "previews/Tree_expand.h"
 
 Tree_expand::Tree_expand(Dir_preview* dp, Gtk::Box& box)
 	: Tree{dp, box}

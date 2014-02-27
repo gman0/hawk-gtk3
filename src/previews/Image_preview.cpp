@@ -1,5 +1,5 @@
-#include "previews/ImagePreview.h"
-#include "previews/ImagePreview_hash.h"
+#include "previews/Image_preview.h"
+#include "previews/Image_preview_hash.h"
 #include "Window.h"
 
 using namespace hawk;

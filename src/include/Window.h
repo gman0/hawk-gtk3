@@ -2,8 +2,8 @@
 #define WINDOW_H
 
 #include <gtkmm.h>
-#include <hawk/TabManager.h>
-#include <hawk/TypeFactory.h>
+#include <hawk/Tab_manager.h>
+#include <hawk/Type_factory.h>
 #include <vector>
 #include <boost/filesystem/path.hpp>
 #include "previews/Tree.h"

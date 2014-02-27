@@ -1,7 +1,7 @@
 #ifndef DIR_PREVIEW_H
 #define DIR_PREVIEW_H
 
-#include <hawk/handlers/dir.h>
+#include <hawk/handlers/List_dir.h>
 #include <hawk/Tab.h>
 #include "Tree.h"
 

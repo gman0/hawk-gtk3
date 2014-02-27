@@ -4,7 +4,7 @@
 #include <functional>
 #include <hawk/handlers/hash.h>
 #include <hawk/calchash.h>
-#include "previews/ImagePreview.h"
+#include "previews/Image_preview.h"
 
 static std::string type { "image" };
 static size_t hash = hawk::calculate_mime_hash(type);

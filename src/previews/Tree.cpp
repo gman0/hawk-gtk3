@@ -3,7 +3,7 @@
 #include <string>
 #include <algorithm>
 #include "previews/Tree.h"
-#include "previews/DirPreview.h"
+#include "previews/Dir_preview.h"
 
 using namespace std;
 
