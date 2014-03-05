@@ -7,6 +7,8 @@
 #include "previews/Dir_preview.h"
 #include "previews/Image_preview.h"
 #include "previews/Image_preview_hash_extern.h"
+#include "previews/Text_preview.h"
+#include "previews/Text_preview_hash_extern.h"
 
 using namespace boost::filesystem;
 using namespace std;
@@ -79,9 +81,15 @@ Window::Window()
 	hawk::Type_factory::Type_product image_preview_handler =
 		[this](const path& p, hawk::Column* parent_column)
 			{ return new Image_preview{p, parent_column, this}; };
+	
+	// register Text_preview handler
+	
+	hawk::Type_factory::Type_product text_preview_handler =
+		[this](const path& p, hawk::Column* parent_column)
+			{ return new Text_preview{p, parent_column, this}; };
 
 	m_type_factory->register_type(
-		hawk::get_handler_hash<Image_preview>(), image_preview_handler);
+		hawk::get_handler_hash<Text_preview>(), text_preview_handler);
 
 	// only after the List_dir handler is registered we can instantiate Tab_manager
 	m_tab_manager = new hawk::Tab_manager {m_type_factory, ncols};
