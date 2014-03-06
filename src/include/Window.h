@@ -6,6 +6,7 @@
 #include <hawk/Type_factory.h>
 #include <vector>
 #include <boost/filesystem/path.hpp>
+#include "Cmd.h"
 #include "previews/Tree.h"
 
 using Tree_vector = std::vector<Tree*>;
@@ -18,10 +19,12 @@ private:
 
 	hawk::Tab_manager::Tab_iterator m_current_tab;
 
+	Cmd m_cmd;
+
 	Tree_vector m_trees;
 
 	Gtk::HBox m_tree_box;
-	Gtk::HBox m_hbox_cd;
+	Gtk::HBox m_hbox_cmd;
 	Gtk::HBox m_bottom;
 	Gtk::Box  m_vbox;
 
@@ -31,8 +34,8 @@ private:
 	Gtk::Button m_button_quit;
 	Gtk::Label m_pwd_label;
 
-	Gtk::Entry  m_entry_cd;
-	Gtk::Button m_button_cd;
+	Gtk::Entry  m_entry_cmd;
+	Gtk::Button m_button_cmd;
 
 	Gtk::InfoBar m_infobar;
 	Gtk::Label   m_infobar_msg;
@@ -51,12 +54,16 @@ public:
 	void update_and_redraw();
 
 	void set_pwd(const boost::filesystem::path& pwd);
+	void rename(const boost::filesystem::path& new_p);
 
 	void set_infobar_msg(const std::string& msg);
 
 protected:
+	void register_handlers();
+	void register_commands();
+
 	void on_button_quit();
-	void on_button_cd();
+	void on_button_cmd();
 	void on_infobar_response(int response);
 
 };

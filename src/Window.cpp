@@ -2,6 +2,7 @@
 #include <exception>
 #include <hawk/handlers/List_dir.h>
 #include <hawk/handlers/List_dir_hash.h>
+#include <hawk/fsctl.h>
 #include <boost/system/error_code.hpp>
 #include "Window.h"
 #include "previews/Dir_preview.h"
@@ -20,7 +21,7 @@ Window::Window()
 	m_type_factory{new hawk::Type_factory},
 	m_vbox{Gtk::ORIENTATION_VERTICAL},
 	m_button_quit{"_Quit", true},
-	m_button_cd{"_cd", true}
+	m_button_cmd{"_cmd", true}
 {
 	// setup our window
 
@@ -33,23 +34,23 @@ Window::Window()
 
 	m_vbox.pack_start(m_pwd_label, Gtk::PACK_SHRINK);
 	m_vbox.pack_start(m_tree_box, Gtk::PACK_EXPAND_WIDGET);
-	m_vbox.pack_start(m_hbox_cd, Gtk::PACK_SHRINK);
+	m_vbox.pack_start(m_hbox_cmd, Gtk::PACK_SHRINK);
 
 	m_vbox.pack_start(m_bottom, Gtk::PACK_SHRINK);
 	m_bottom.pack_end(m_button_box, Gtk::PACK_SHRINK);
 
 	// m_vbox.pack_start(m_button_box, Gtk::PACK_SHRINK);
-	m_button_box.pack_start(m_button_cd, Gtk::PACK_SHRINK);
+	m_button_box.pack_start(m_button_cmd, Gtk::PACK_SHRINK);
 	m_button_box.pack_start(m_button_quit, Gtk::PACK_SHRINK);
 	m_button_box.set_border_width(5);
 	m_button_box.set_layout(Gtk::BUTTONBOX_END);
 
-	m_hbox_cd.set_border_width(5);
-	m_hbox_cd.pack_start(m_entry_cd, Gtk::PACK_EXPAND_WIDGET);
+	m_hbox_cmd.set_border_width(5);
+	m_hbox_cmd.pack_start(m_entry_cmd, Gtk::PACK_EXPAND_WIDGET);
 
 	// connect the button to a callback function
 	m_button_quit.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_quit));
-	m_button_cd.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_cd));
+	m_button_cmd.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_cmd));
 
 	Gtk::Container* infobar_container =
 		dynamic_cast<Gtk::Container*>(m_infobar.get_content_area());
@@ -65,31 +66,11 @@ Window::Window()
 
 	m_infobar.signal_response().connect(sigc::mem_fun(*this, &Window::on_infobar_response));
 
+	register_commands();
+
 	// *-*-* hawk *-*-*
-
-	// register List_dir handler
-
-	hawk::Type_factory::Type_product list_dir_handler =
-		[this](const path& p, hawk::Column* parent_column)
-			{ return new Dir_preview{p, parent_column, this, ncols}; };
-
-	m_type_factory->register_type(
-		hawk::get_handler_hash<hawk::List_dir>(), list_dir_handler);
-
-	// register Image_preview handler
 	
-	hawk::Type_factory::Type_product image_preview_handler =
-		[this](const path& p, hawk::Column* parent_column)
-			{ return new Image_preview{p, parent_column, this}; };
-	
-	// register Text_preview handler
-	
-	hawk::Type_factory::Type_product text_preview_handler =
-		[this](const path& p, hawk::Column* parent_column)
-			{ return new Text_preview{p, parent_column, this}; };
-
-	m_type_factory->register_type(
-		hawk::get_handler_hash<Text_preview>(), text_preview_handler);
+	register_handlers();
 
 	// only after the List_dir handler is registered we can instantiate Tab_manager
 	m_tab_manager = new hawk::Tab_manager {m_type_factory, ncols};
@@ -113,15 +94,52 @@ Window::~Window()
 		delete tree;
 }
 
+void Window::register_handlers()
+{
+	// register List_dir handler
+
+	hawk::Type_factory::Type_product list_dir_handler =
+		[this](const path& p, hawk::Column* parent_column)
+			{ return new Dir_preview{p, parent_column, this, ncols}; };
+
+	m_type_factory->register_type(
+		hawk::get_handler_hash<hawk::List_dir>(), list_dir_handler);
+
+	// register Image_preview handler
+	
+	hawk::Type_factory::Type_product image_preview_handler =
+		[this](const path& p, hawk::Column* parent_column)
+			{ return new Image_preview{p, parent_column, this}; };
+	
+	// register Text_preview handler
+	
+	hawk::Type_factory::Type_product text_preview_handler =
+		[this](const path& p, hawk::Column* parent_column)
+			{ return new Text_preview{p, parent_column, this}; };
+
+	m_type_factory->register_type(
+		hawk::get_handler_hash<Text_preview>(), text_preview_handler);
+}
+
+void Window::register_commands()
+{
+	// cd command
+	m_cmd.register_command("cd",
+		[this](const string& arg){ set_pwd(path{arg}); return true; });
+
+	// rename command
+	m_cmd.register_command("rename",
+		[this](const string& arg){ rename(path{arg}); return true; });
+}
+
 void Window::on_button_quit()
 {
 	hide();
 }
 
-void Window::on_button_cd()
+void Window::on_button_cmd()
 {
-	boost::filesystem::path pwd { m_entry_cd.get_text().c_str() };
-	set_pwd(pwd);
+	m_cmd(m_entry_cmd.get_text());
 }
 
 void Window::on_infobar_response(int response)
@@ -162,4 +180,23 @@ void Window::set_infobar_msg(const std::string& msg)
 	m_infobar_msg.set_text(msg);
 	m_infobar.set_message_type(Gtk::MESSAGE_INFO);
 	m_infobar.show();
+}
+
+void Window::rename(const path& new_p)
+{
+	boost::system::error_code ec;
+
+	const hawk::List_dir* ld = dynamic_cast<const hawk::List_dir*>(
+		m_current_tab->get_active_column()->get_handler());
+	path old_p { ld->get_cursor()->path };
+
+	hawk::rename(old_p, m_current_tab->get_pwd() / new_p, &(*m_current_tab), ec);
+
+	if (ec)
+	{
+		set_infobar_msg(ec.message());
+		return;
+	}
+
+	set_pwd(".");
 }
