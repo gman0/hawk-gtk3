@@ -18,7 +18,7 @@ Text_preview::Text_preview(const boost::filesystem::path& p,
 {
 	std::ifstream ifs {p.c_str()};
 	ifs.read(read_buffer, buffer_size);
-	read_buffer[buffer_size - 1] = '\0';
+	read_buffer[ifs.gcount() - 1] = '\0';
 
 	m_text_view->set_editable(false);
 	m_text_buffer->set_text(read_buffer);
