@@ -1,5 +1,3 @@
-#include <iostream>
-#include <exception>
 #include <hawk/handlers/List_dir.h>
 #include <hawk/handlers/List_dir_hash.h>
 #include <hawk/fsctl.h>
@@ -25,12 +23,12 @@ Window::Window()
 {
 	// setup our window
 
-	set_title("hawk-gtk3-test");
+	set_title("hawk-gtk3");
 	set_border_width(5);
 	set_default_size(600, 300);
 	add(m_vbox);
 
-	// setup a layout for our window
+	// setup a layout for the window
 
 	m_vbox.pack_start(m_pwd_label, Gtk::PACK_SHRINK);
 	m_vbox.pack_start(m_tree_box, Gtk::PACK_EXPAND_WIDGET);
@@ -48,9 +46,11 @@ Window::Window()
 	m_hbox_cmd.set_border_width(5);
 	m_hbox_cmd.pack_start(m_entry_cmd, Gtk::PACK_EXPAND_WIDGET);
 
-	// connect the button to a callback function
-	m_button_quit.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_quit));
-	m_button_cmd.signal_clicked().connect(sigc::mem_fun(*this, &Window::on_button_cmd));
+	// connect the buttons to ther respective callback function
+	m_button_quit.signal_clicked().
+		connect(sigc::mem_fun(*this, &Window::on_button_quit));
+	m_button_cmd.signal_clicked().
+		connect(sigc::mem_fun(*this, &Window::on_button_cmd));
 
 	Gtk::Container* infobar_container =
 		dynamic_cast<Gtk::Container*>(m_infobar.get_content_area());
@@ -64,7 +64,8 @@ Window::Window()
 	m_infobar.add_button("Ok", 0);
 	m_bottom.pack_start(m_infobar, Gtk::PACK_SHRINK);
 
-	m_infobar.signal_response().connect(sigc::mem_fun(*this, &Window::on_infobar_response));
+	m_infobar.signal_response().
+		connect(sigc::mem_fun(*this, &Window::on_infobar_response));
 
 	register_commands();
 
@@ -72,11 +73,14 @@ Window::Window()
 	
 	register_handlers();
 
+	m_trees.reserve(ncols + 1);
+	m_trees.shrink_to_fit();
+
 	// only after the List_dir handler is registered we can instantiate Tab_manager
 	m_tab_manager = new hawk::Tab_manager {m_type_factory, ncols};
 
 	// create a new tab
-	m_current_tab = m_tab_manager->add_tab("/home/gman");
+	m_current_tab = m_tab_manager->add_tab(current_path());
 
 	// print our working directory at the top of the window
 	m_pwd_label.set_text(m_current_tab->get_pwd().c_str());
