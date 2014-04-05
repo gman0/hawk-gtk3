@@ -25,7 +25,10 @@ Dir_preview::Dir_preview(const path& p,
 	else if (m_id == ncols)
 		t = new Tree_active {this, win->get_tree_box()};
 	else
-		t = new Tree_expand {this, win->get_tree_box()};
+	{
+		tvec[m_id] = new Tree_expand {this, win->get_tree_box()};
+		return;
+	}
 
 	tvec.push_back(t);
 }
