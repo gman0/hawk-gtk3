@@ -1,7 +1,6 @@
 #ifndef IMAGE_PREVIEW_HASH_H
 #define IMAGE_PREVIEW_HASH_H
 
-#include <functional>
 #include <hawk/handlers/hash.h>
 #include <hawk/calchash.h>
 #include "previews/Image_preview.h"
