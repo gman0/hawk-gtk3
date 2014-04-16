@@ -114,6 +114,9 @@ void Window::register_handlers()
 	hawk::Type_factory::Type_product image_preview_handler =
 		[this](const path& p, hawk::Column* parent_column)
 			{ return new Image_preview{p, parent_column, this}; };
+
+	m_type_factory->register_type(
+		hawk::get_handler_hash<Image_preview>(), image_preview_handler);
 	
 	// register Text_preview handler
 	
