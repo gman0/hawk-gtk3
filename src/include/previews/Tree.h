@@ -74,6 +74,11 @@ public:
 
 	virtual void update();
 
+	inline bool empty() { return m_tree_model->children().empty(); }
+	Glib::RefPtr<Gtk::ListStore> get_tree_model() { return m_tree_model; }
+	std::shared_ptr<Model_columns> get_columns() { return m_columns; }
+	Gtk::TreeModel::iterator get_cursor();
+
 private:
 	Gtk::TreeModel::iterator get_tree_iter(int id,
 		const Gtk::TreeModel::Children& children);

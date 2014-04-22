@@ -99,8 +99,7 @@ void Tree::update()
 	// insert the dir entries into the tree model,
 	// but only if we have anything to insert
 
-	if (!m_tree_model->children().empty())
-		m_tree_model->clear();
+	m_tree_model->clear();
 
 	const hawk::List_dir::Dir_vector& vec = m_handler->get_contents();
 
@@ -159,8 +158,18 @@ void Tree::update()
 	m_tree_view->set_cursor(Gtk::TreePath {tree_cursor});
 }
 
+Gtk::TreeModel::iterator Tree::get_cursor()
+{
+	Gtk::TreeModel::Path tree_path;
+	Gtk::TreeViewColumn* tree_col;
+
+	m_tree_view->get_cursor(tree_path, tree_col);
+
+	return m_tree_model->get_iter(tree_path);
+}
+
 Gtk::TreeModel::iterator Tree::get_tree_iter(int id,
-		const Gtk::TreeModel::Children& children)
+	const Gtk::TreeModel::Children& children)
 {
 	auto it = children.begin();
 	while (it->get_value(m_columns->id) != id)
