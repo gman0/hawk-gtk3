@@ -112,15 +112,10 @@ void Tree_active::on_cursor_changed()
 {
 	// get the position of the cursor
 
-	if (m_tree_model->children().size() == 0)
+	if (empty())
 		return;
 
-	Gtk::TreeModel::Path tree_path;
-	Gtk::TreeViewColumn* tree_col;
-
-	m_tree_view->get_cursor(tree_path, tree_col);
-
-	int id = m_tree_model->get_iter(tree_path)->get_value(m_columns->id);
+	int id = get_cursor()->get_value(m_columns->id);
 
 	// set the cursor
 
