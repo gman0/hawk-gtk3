@@ -17,6 +17,9 @@
 	along with hawk-gtk3.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// This is needed because of undefined reference to `boost::filesystem::detail::copy_file
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+
 #include <hawk/handlers/List_dir.h>
 #include <hawk/handlers/List_dir_hash.h>
 #include <hawk/fsctl.h>
@@ -27,8 +30,10 @@
 #include "previews/Image_preview_hash_extern.h"
 #include "previews/Text_preview.h"
 #include "previews/Text_preview_hash_extern.h"
+#include "previews/Tree_active.h"
 
 using namespace boost::filesystem;
+using boost::system::error_code;
 using namespace std;
 
 constexpr unsigned ncols = 3;
@@ -151,11 +156,37 @@ void Window::register_commands()
 {
 	// cd command
 	m_cmd.register_command("cd",
-		[this](const string& arg){ set_pwd(path{arg}); return true; });
+		[this](const string& arg){ set_pwd(arg); return true; });
 
 	// rename command
 	m_cmd.register_command("rename",
-		[this](const string& arg){ rename(path{arg}); return true; });
+		[this](const string& arg){ rename(arg); return true; });
+
+	// copy
+	m_cmd.register_command("cp",
+		[this](const string& arg){ copy(arg); return true; });
+
+	//move
+	m_cmd.register_command("mv",
+		[this](const string& arg){ move(arg); return true; });
+
+	// remove command
+	m_cmd.register_command("delete",
+		[this](const string&){ remove(); return true; });
+	m_cmd.register_command("delete_all",
+		[this](const string&){ remove_all(); return true; });
+
+	// mkdir command
+	m_cmd.register_command("mkdir",
+		[this](const string& arg){ mkdir(arg); return true; });
+
+	// symlink command
+	m_cmd.register_command("symlink",
+		[this](const string& arg){ symlink(arg); return true; });
+
+	// hardlink command
+	m_cmd.register_command("hardlink",
+		[this](const string& arg){ hardlink(arg); return true; });
 }
 
 void Window::on_button_quit()
@@ -168,7 +199,7 @@ void Window::on_button_cmd()
 	m_cmd(m_entry_cmd.get_text());
 }
 
-void Window::on_infobar_response(int response)
+void Window::on_infobar_response(int)
 {
 	m_infobar_msg.set_text("");
 	m_infobar.hide();
@@ -187,9 +218,9 @@ void Window::update_and_redraw()
 	redraw();
 }
 
-void Window::set_pwd(const boost::filesystem::path& pwd)
+void Window::set_pwd(const path& pwd)
 {
-	boost::system::error_code ec;
+	error_code ec;
 	m_current_tab->set_pwd(pwd, ec);
 
 	if (ec)
@@ -201,28 +232,129 @@ void Window::set_pwd(const boost::filesystem::path& pwd)
 	update_and_redraw();
 }
 
-void Window::set_infobar_msg(const std::string& msg)
+void Window::set_infobar_msg(const string& msg)
 {
 	m_infobar_msg.set_text(msg);
 	m_infobar.set_message_type(Gtk::MESSAGE_INFO);
 	m_infobar.show();
 }
 
-void Window::rename(const path& new_p)
+void Window::check_error(const error_code& ec)
 {
-	boost::system::error_code ec;
-
-	const hawk::List_dir* ld = dynamic_cast<const hawk::List_dir*>(
-		m_current_tab->get_active_column()->get_handler());
-	path old_p { ld->get_cursor()->path };
-
-	hawk::rename(old_p, m_current_tab->get_pwd() / new_p, &(*m_current_tab), ec);
-
 	if (ec)
 	{
 		set_infobar_msg(ec.message());
 		return;
 	}
 
-	set_pwd(".");
+	refresh();
+}
+
+void Window::scroll_up()
+{
+	// find out which Tree is Tree_active:
+	//it's either the last one
+	Tree_active* tree = dynamic_cast<Tree_active*>(m_trees.back());
+	if (tree == nullptr)
+	{
+		// or the last but one
+		tree = static_cast<Tree_active*>(*(m_trees.end() - 2));
+	}
+
+	auto children = tree->get_tree_model()->children();
+	if (children.size() > 1)
+	{
+		auto cursor = tree->get_cursor();
+
+		// if the removed file/directory was at the top
+		if (children.begin() == cursor)
+			++cursor; // scroll down
+		else
+			--cursor; // otherwise scroll up
+
+		int id = cursor->get_value(tree->get_columns()->id);
+
+		m_current_tab->set_cursor(
+			m_current_tab->get_begin_cursor() + id);
+
+		redraw();
+	}
+}
+
+void Window::rename(const path& new_p)
+{
+	boost::system::error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+	path old_p { ld->get_cursor()->path };
+
+	hawk::rename(old_p, m_current_tab->get_pwd() / new_p, &(*m_current_tab), ec);
+	check_error(ec);
+}
+
+void Window::copy(const path& to)
+{
+	boost::system::error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+
+	hawk::copy(ld->get_cursor()->path, canonical(to,
+		m_current_tab->get_pwd()), ec);
+	check_error(ec);
+}
+
+void Window::move(const path& to)
+{
+	boost::system::error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+
+	hawk::move(ld->get_cursor()->path, canonical(to,
+		m_current_tab->get_pwd()), ec);
+	scroll_up();
+	check_error(ec);
+}
+
+
+
+void Window::remove()
+{
+	error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+
+	hawk::remove(ld->get_cursor()->path, ec);
+	scroll_up();
+	check_error(ec);
+}
+
+void Window::remove_all()
+{
+	error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+
+	hawk::remove_all(ld->get_cursor()->path, ec);
+	scroll_up();
+	check_error(ec);
+}
+
+void Window::mkdir(const path& p)
+{
+	error_code ec;
+	hawk::create_directories(p, ec);
+	check_error(ec);
+}
+
+void Window::symlink(const path& new_symlink)
+{
+	error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+
+	hawk::create_symlink(ld->get_cursor()->path, new_symlink, ec);
+	check_error(ec);
+}
+
+void Window::hardlink(const path& new_hard_link)
+{
+	error_code ec;
+	const hawk::List_dir* ld = m_current_tab->get_active_ld();
+
+	hawk::create_hard_link(ld->get_cursor()->path, new_hard_link, ec);
+	check_error(ec);
 }

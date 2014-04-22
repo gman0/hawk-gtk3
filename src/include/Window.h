@@ -72,12 +72,20 @@ public:
 	inline void redraw() { show_all_children(); }
 	void update_and_redraw();
 
+	// commands
 	void set_pwd(const boost::filesystem::path& pwd);
 	void rename(const boost::filesystem::path& new_p);
+	void copy(const boost::filesystem::path& to);
+	void move(const boost::filesystem::path& to);
+	void remove();
+	void remove_all();
+	void mkdir(const boost::filesystem::path& p);
+	void symlink(const boost::filesystem::path& new_symlink);
+	void hardlink(const boost::filesystem::path& new_hard_link);
 
 	void set_infobar_msg(const std::string& msg);
 
-protected:
+private:
 	void register_handlers();
 	void register_commands();
 
@@ -85,6 +93,14 @@ protected:
 	void on_button_cmd();
 	void on_infobar_response(int response);
 
+	// refreshes the current working path by setting it to the current directory
+	inline void refresh() { set_pwd("."); }
+
+	// check error_code and eventually refresh
+	void check_error(const boost::system::error_code& ec);
+
+	// scrolls up by one position after calling remove/remove_all
+	void scroll_up();
 };
 
 #endif // WINDOW_H
