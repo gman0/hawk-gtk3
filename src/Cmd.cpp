@@ -47,5 +47,7 @@ void Cmd::parse(const std::string& cmd_string, std::string& cmd_name,
 	std::string::size_type space_pos = cmd_string.find_first_of(' ');
 
 	cmd_name = cmd_string.substr(0, space_pos);
-	cmd_args = cmd_string.substr(++space_pos, cmd_string.size());
+
+	if (space_pos != std::string::npos)
+		cmd_args = cmd_string.substr(++space_pos, cmd_string.size());
 }
