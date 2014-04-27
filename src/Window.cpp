@@ -283,6 +283,8 @@ void Window::scroll_up()
 
 void Window::rename(const path& new_p)
 {
+	if (new_p.empty()) return;
+
 	boost::system::error_code ec;
 	const hawk::List_dir* ld = m_current_tab->get_active_ld();
 	path old_p { ld->get_cursor()->path };
@@ -293,6 +295,8 @@ void Window::rename(const path& new_p)
 
 void Window::copy(const path& to)
 {
+	if (to.empty()) return;
+
 	boost::system::error_code ec;
 	const hawk::List_dir* ld = m_current_tab->get_active_ld();
 
@@ -303,6 +307,8 @@ void Window::copy(const path& to)
 
 void Window::move(const path& to)
 {
+	if (to.empty()) return;
+
 	boost::system::error_code ec;
 	const hawk::List_dir* ld = m_current_tab->get_active_ld();
 
@@ -336,6 +342,8 @@ void Window::remove_all()
 
 void Window::mkdir(const path& p)
 {
+	if (p.empty()) return;
+
 	error_code ec;
 	hawk::create_directories(p, ec);
 	check_error(ec);
@@ -343,6 +351,8 @@ void Window::mkdir(const path& p)
 
 void Window::symlink(const path& new_symlink)
 {
+	if (new_symlink.empty()) return;
+
 	error_code ec;
 	const hawk::List_dir* ld = m_current_tab->get_active_ld();
 
@@ -352,6 +362,8 @@ void Window::symlink(const path& new_symlink)
 
 void Window::hardlink(const path& new_hard_link)
 {
+	if (new_hard_link.empty()) return;
+
 	error_code ec;
 	const hawk::List_dir* ld = m_current_tab->get_active_ld();
 
